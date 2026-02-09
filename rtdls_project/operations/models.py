@@ -22,7 +22,7 @@ class Crew(models.Model):
     is_available = models.BooleanField(default=True)
 
     def __str__(self):
-        return f'{self.rank} {self.full_name}'
+        return self.full_name
 
 
 class Pilot(models.Model):
@@ -35,7 +35,7 @@ class Pilot(models.Model):
         ordering = ['full_name']
 
     def __str__(self):
-        return f'{self.rank} {self.full_name}'
+        return self.full_name
 
 
 class Aircraft(models.Model):
