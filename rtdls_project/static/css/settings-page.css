@@ -44,17 +44,19 @@
 }
 
 .settings-brand-mark {
-    width: 2.3rem;
-    height: 2.3rem;
-    border-radius: 0.5rem;
-    background: linear-gradient(135deg, #0f2f5a, #2f79d4);
-    color: #f8d14f;
+    width: 2.45rem;
+    height: 2.45rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
+    flex: 0 0 auto;
+}
+
+.settings-brand-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 .settings-brand-name {

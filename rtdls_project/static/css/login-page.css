@@ -64,18 +64,19 @@ body {
 }
 
 .brand-mark {
-    width: 52px;
-    height: 68px;
-    border-radius: 8px;
-    background: linear-gradient(180deg, #043d87, #2a7bcf);
-    border: 2px solid #f0c500;
-    color: #f0f4ff;
+    width: 62px;
+    height: 82px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 0.82rem;
-    letter-spacing: 0.02em;
+    flex: 0 0 auto;
+}
+
+.brand-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 .portal-title {
