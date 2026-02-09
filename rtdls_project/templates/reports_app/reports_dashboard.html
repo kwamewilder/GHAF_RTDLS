@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block body_class %}reports-page{% endblock %}
+{% block main_class %}container-fluid reports-shell py-3 py-lg-4{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/reports-page.css' %}">
+<link rel="stylesheet" href="{% static 'css/topbar-actions.css' %}">
+{% endblock %}
+
+{% block navigation %}{% endblock %}
+
+{% block content %}
+<div class="reports-layout-wrap">
+    <header class="reports-topbar">
+        <div class="reports-brand">
+            <div class="reports-brand-mark" aria-hidden="true">✈</div>
+            <div class="reports-brand-name">Flight Monitoring Portal</div>
+        </div>
+        <button
+            class="btn portal-mobile-menu-toggle d-inline-flex d-lg-none"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#reportsMobileNav"
+            aria-controls="reportsMobileNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+        >
+            Menu
+        </button>
+        <nav class="reports-nav d-none d-lg-flex" aria-label="Primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+        {% include 'partials/topbar_actions.html' %}
+    </header>
+    <div class="collapse portal-mobile-nav d-lg-none" id="reportsMobileNav">
+        <nav class="portal-mobile-nav-links" aria-label="Mobile primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+    </div>
+
+    <section class="reports-main-grid">
+        <article class="reports-panel reports-config-panel">
+            <h1>Report Configuration</h1>
+            <p>Define parameters for your flight data report.</p>
+
+            <form method="get" class="reports-form" novalidate>
+                <div class="reports-field-group">
+                    <label class="form-label" for="id_date_from">Date Range</label>
+                    <div class="date-range-row">
+                        <input id="id_date_from" class="form-control" type="date" name="date_from" value="{{ filters.date_from|date:'Y-m-d' }}">
+                        <input id="id_date_to" class="form-control" type="date" name="date_to" value="{{ filters.date_to|date:'Y-m-d' }}">
+                    </div>
+                </div>
+
+                <div class="reports-field-group">
+                    <label class="form-label" for="id_pilot">Pilot</label>
+                    <select id="id_pilot" class="form-select" name="pilot">
+                        <option value="">Select a pilot</option>
+                        {% for pilot in pilots %}
+                        <option value="{{ pilot.id }}" {% if filters.pilot == pilot.id|stringformat:'s' %}selected{% endif %}>{{ pilot.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="reports-field-group">
+                    <label class="form-label" for="id_aircraft">Aircraft</label>
+                    <select id="id_aircraft" class="form-select" name="aircraft">
+                        <option value="">Select an aircraft</option>
+                        {% for aircraft in aircraft_options %}
+                        <option value="{{ aircraft.id }}" {% if filters.aircraft == aircraft.id|stringformat:'s' %}selected{% endif %}>{{ aircraft.tail_number }} ({{ aircraft.model }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="reports-field-group">
+                    <label class="form-label" for="id_flight_id">Flight ID</label>
+                    <select id="id_flight_id" class="form-select" name="flight_id">
+                        <option value="">Select a flight ID</option>
+                        {% for log in flight_id_options %}
+                        <option value="{{ log.id }}" {% if filters.flight_id == log.id|stringformat:'s' %}selected{% endif %}>#{{ log.id }} - {{ log.aircraft.tail_number }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="reports-field-group">
+                    <label class="form-label">Report Granularity</label>
+                    <div class="granularity-grid">
+                        <label class="granularity-item"><input type="radio" name="granularity" value="daily" {% if filters.granularity == 'daily' %}checked{% endif %}> Daily</label>
+                        <label class="granularity-item"><input type="radio" name="granularity" value="weekly" {% if filters.granularity == 'weekly' %}checked{% endif %}> Weekly</label>
+                        <label class="granularity-item"><input type="radio" name="granularity" value="monthly" {% if filters.granularity == 'monthly' %}checked{% endif %}> Monthly</label>
+                        <label class="granularity-item"><input type="radio" name="granularity" value="custom" {% if filters.granularity == 'custom' %}checked{% endif %}> Custom</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 reports-generate-btn">Generate Report</button>
+
+                <div class="reports-download-row">
+                    <a class="btn btn-light border" href="{% url 'report-export' %}?{{ filter_query }}&format=csv">Download CSV</a>
+                    <a class="btn btn-light border" href="{% url 'report-export' %}?{{ filter_query }}&format=pdf">Download PDF</a>
+                </div>
+            </form>
+        </article>
+
+        <section class="reports-right-column">
+            <div class="reports-stats-grid">
+                <article class="stat-card">
+                    <div class="stat-title">Total Flights</div>
+                    <div class="stat-value">{{ stats.total_flights|intcomma }}</div>
+                </article>
+                <article class="stat-card">
+                    <div class="stat-title">Avg. Duration</div>
+                    <div class="stat-value">{{ stats.avg_duration }}</div>
+                </article>
+                <article class="stat-card">
+                    <div class="stat-title">Fuel Consumed</div>
+                    <div class="stat-value">{{ stats.fuel_consumed|floatformat:1|intcomma }} Gal</div>
+                </article>
+                <article class="stat-card">
+                    <div class="stat-title">On-Time Perf.</div>
+                    <div class="stat-value">{{ stats.on_time_perf|floatformat:1 }}%</div>
+                </article>
+            </div>
+
+            <article class="reports-panel table-panel">
+                <h2>Recent Flight Data</h2>
+                <p>Preview of the latest flights.</p>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 report-table">
+                        <thead>
+                            <tr>
+                                <th>Flight</th>
+                                <th>Pilot</th>
+                                <th>Aircraft</th>
+                                <th>Route</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in recent_logs %}
+                            <tr>
+                                <td>{{ row.code }}</td>
+                                <td>{{ row.pilot }}</td>
+                                <td>{{ row.aircraft }}</td>
+                                <td>{{ row.route }}</td>
+                                <td>{{ row.date }}</td>
+                                <td>{{ row.duration }}</td>
+                                <td>
+                                    <span class="status-chip status-{{ row.status|lower }}">{{ row.status }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">No matching flight records.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+        <details class="reports-panel activity-panel reports-full-row" open>
+            <summary>Recent Report Activities</summary>
+            <ul class="activity-list">
+                {% for activity in recent_activities %}
+                <li>
+                    <strong>{{ activity.get_action_display }} {{ activity.entity }}</strong>
+                    <span>{{ activity.description }}</span>
+                    <small>{{ activity.created_at|date:'Y-m-d H:i' }}{% if activity.user %} by {{ activity.user.username }}{% endif %}</small>
+                </li>
+                {% empty %}
+                <li><span>No recent report-related activities.</span></li>
+                {% endfor %}
+            </ul>
+        </details>
+    </section>
+
+    <footer class="reports-footer">
+        <span>© {% now "Y" %} Ghana Air Force. All rights reserved.</span>
+        <span class="footer-icons" aria-hidden="true">𝕏 · in · ⌂</span>
+    </footer>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/topbar-actions.js' %}"></script>
+{% endblock %}

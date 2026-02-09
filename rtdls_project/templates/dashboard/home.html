@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}dashboard-page{% endblock %}
+{% block main_class %}container-fluid dashboard-shell py-3 py-lg-4{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/dashboard-page.css' %}">
+<link rel="stylesheet" href="{% static 'css/topbar-actions.css' %}">
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+>
+{% endblock %}
+
+{% block navigation %}{% endblock %}
+
+{% block content %}
+<div class="ops-layout">
+    <header class="ops-topbar">
+        <div class="ops-brand">
+            <div class="ops-brand-mark" aria-hidden="true">GAF</div>
+            <div class="ops-brand-text">Flight Monitoring Portal</div>
+        </div>
+        <button
+            class="btn portal-mobile-menu-toggle d-inline-flex d-lg-none"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#dashboardMobileNav"
+            aria-controls="dashboardMobileNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+        >
+            Menu
+        </button>
+        <nav class="ops-nav d-none d-lg-flex" aria-label="Primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            {% if request.user.role == 'admin' or request.user.role == 'flight_ops' %}
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% endif %}
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+        {% include 'partials/topbar_actions.html' %}
+    </header>
+    <div class="collapse portal-mobile-nav d-lg-none" id="dashboardMobileNav">
+        <nav class="portal-mobile-nav-links" aria-label="Mobile primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            {% if request.user.role == 'admin' or request.user.role == 'flight_ops' %}
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% endif %}
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+    </div>
+
+    <section class="kpi-grid">
+        <article class="kpi-card">
+            <div class="kpi-title">Total Flights Today</div>
+            <div id="metric-flights-today" class="kpi-value">{{ metrics.flights_today }}</div>
+            <div class="kpi-note">Across all operational bases</div>
+        </article>
+        <article class="kpi-card">
+            <div class="kpi-title">Active Flights</div>
+            <div id="metric-active-missions" class="kpi-value kpi-blue">{{ metrics.active_missions|stringformat:'02d' }}</div>
+            <div class="kpi-note">Currently airborne</div>
+        </article>
+        <article class="kpi-card">
+            <div class="kpi-title">On-Time Departures</div>
+            <div id="metric-on-time-rate" class="kpi-value">{{ metrics.on_time_departure_rate|floatformat:1 }}%</div>
+            <div class="kpi-note">Maintaining schedule efficiency</div>
+        </article>
+        <article class="kpi-card">
+            <div class="kpi-title">Delayed Arrivals</div>
+            <div id="metric-delayed-arrivals" class="kpi-value kpi-red">{{ metrics.delayed_arrivals|stringformat:'02d' }}</div>
+            <div class="kpi-note">Requires immediate attention</div>
+        </article>
+    </section>
+
+    <section class="dashboard-grid">
+        <article class="panel panel-feed">
+            <div class="panel-head">
+                <h2>Real-Time Flight Feed</h2>
+                <div class="live-pill">Live</div>
+            </div>
+            <div class="feed-grid">
+                <div class="feed-metric">
+                    <span class="feed-label">Speed</span>
+                    <strong id="feed-speed">{{ metrics.live_feed.speed_knots }}</strong>
+                    <span class="feed-unit">Knots</span>
+                </div>
+                <div class="feed-metric">
+                    <span class="feed-label">Altitude</span>
+                    <strong id="feed-altitude">{{ metrics.live_feed.altitude_feet }}</strong>
+                    <span class="feed-unit">Feet</span>
+                </div>
+                <div class="feed-metric">
+                    <span class="feed-label">Flight Level</span>
+                    <strong id="feed-flight-level">{{ metrics.live_feed.flight_level }}</strong>
+                    <span class="feed-unit">Current band</span>
+                </div>
+                <div class="feed-metric">
+                    <span class="feed-label">Mach</span>
+                    <strong id="feed-mach">{{ metrics.live_feed.mach }}</strong>
+                    <span class="feed-unit">Ground speed</span>
+                </div>
+            </div>
+            <p class="updated-note">Last updated: <span id="metric-last-updated">{{ metrics.live_feed.updated_time }}</span></p>
+        </article>
+
+        <article class="panel panel-map">
+            <div class="panel-head">
+                <h2>Live Global Flight Map</h2>
+                <div class="map-controls">
+                    <label for="map-scope-select" class="small text-muted">Scope</label>
+                    <select id="map-scope-select" class="form-select form-select-sm" aria-label="OpenSky map scope">
+                        {% for scope in opensky_scopes %}
+                        <option value="{{ scope.key }}" {% if scope.key == opensky_default_scope %}selected{% endif %}>
+                            {{ scope.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <p>OpenSky flights in selected scope: <strong id="map-active-count">0</strong></p>
+            </div>
+            <div class="map-frame">
+                <div id="opensky-map" role="img" aria-label="OpenSky flight map"></div>
+            </div>
+            <p class="updated-note map-note">
+                <span id="map-status">Loading OpenSky data...</span>
+                <span id="map-updated"></span>
+            </p>
+        </article>
+
+        <article class="panel panel-table">
+            <div class="panel-head">
+                <h2>Most Recent Flight Entries</h2>
+                <p>Overview of the latest recorded flight activities.</p>
+            </div>
+            <div class="table-wrap">
+                <table class="table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>Flight</th>
+                        <th>Route</th>
+                        <th>Status</th>
+                        <th>Aircraft</th>
+                        <th>Time (UTC)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for flight in latest_flights %}
+                        <tr>
+                            <td>
+                                <div class="flight-code">{{ flight.aircraft.tail_number }}</div>
+                                <small class="text-muted">{{ flight.mission_type }}</small>
+                            </td>
+                            <td>{{ flight.departure_base.name }} → {{ flight.arrival_base.name }}</td>
+                            <td>
+                                {% if 'delay' in flight.remarks|lower or 'late' in flight.remarks|lower %}
+                                    <span class="status-chip status-delayed">Delayed</span>
+                                {% elif flight.mission_status == 'active' %}
+                                    <span class="status-chip status-airborne">Airborne</span>
+                                {% elif 'cancel' in flight.remarks|lower %}
+                                    <span class="status-chip status-cancelled">Cancelled</span>
+                                {% else %}
+                                    <span class="status-chip status-landed">Landed</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ flight.aircraft.model }}</td>
+                            <td>{{ flight.flight_datetime|date:'H:i' }} UTC</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No flight logs yet.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <article class="panel panel-chart">
+            <div class="panel-head">
+                <h2>Flight Status Distribution</h2>
+                <p>Current breakdown of flight statuses.</p>
+            </div>
+            <div class="chart-wrap"><canvas id="status-chart"></canvas></div>
+        </article>
+
+        <article class="panel panel-altitude">
+            <div class="panel-head">
+                <h2>Flight Altitude Trend</h2>
+                <p>Altitude profile of a sample flight over time.</p>
+            </div>
+            <div class="chart-wrap"><canvas id="altitude-chart"></canvas></div>
+        </article>
+
+        <article class="panel panel-side">
+            <div class="panel-head">
+                <h2>Maintenance Alerts</h2>
+                <p>Active predictive maintenance notifications.</p>
+            </div>
+            <ul class="alert-list">
+                {% for alert in latest_alerts %}
+                    <li>
+                        <strong>{{ alert.aircraft.tail_number }} - {{ alert.title }}</strong>
+                        <span>{{ alert.message }}</span>
+                    </li>
+                {% empty %}
+                    <li class="empty-alert">No unresolved alerts.</li>
+                {% endfor %}
+            </ul>
+        </article>
+    </section>
+
+    <footer class="ops-footer">© {% now "Y" %} Ghana Air Force. All rights reserved.</footer>
+</div>
+
+{{ metrics.status_distribution|json_script:"status-distribution-data" }}
+{{ metrics.altitude_trend|json_script:"altitude-trend-data" }}
+{{ ghana_bbox|json_script:"ghana-bbox-data" }}
+{{ opensky_scopes|json_script:"opensky-scopes-data" }}
+{{ opensky_default_scope|json_script:"opensky-default-scope-data" }}
+{{ opensky_feed_url|json_script:"opensky-feed-url-data" }}
+{{ opensky_legacy_feed_url|json_script:"opensky-legacy-feed-url-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+></script>
+<script src="{% static 'js/topbar-actions.js' %}"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

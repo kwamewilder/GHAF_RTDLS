@@ -1,0 +1,786 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block body_class %}settings-page{% endblock %}
+{% block main_class %}container-fluid settings-shell py-3 py-lg-4{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/settings-page.css' %}">
+<link rel="stylesheet" href="{% static 'css/topbar-actions.css' %}">
+{% endblock %}
+
+{% block navigation %}{% endblock %}
+
+{% block content %}
+<div class="settings-layout">
+    <header class="settings-topbar">
+        <div class="settings-brand">
+            <div class="settings-brand-mark" aria-hidden="true">GAF</div>
+            <div class="settings-brand-name">Flight Monitoring Portal</div>
+        </div>
+        <button
+            class="btn portal-mobile-menu-toggle d-inline-flex d-lg-none"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#settingsMobileNav"
+            aria-controls="settingsMobileNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+        >
+            Menu
+        </button>
+        <nav class="settings-nav d-none d-lg-flex" aria-label="Primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            {% if request.user.role == 'admin' or request.user.role == 'flight_ops' %}
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% endif %}
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+        {% include 'partials/topbar_actions.html' %}
+    </header>
+    <div class="collapse portal-mobile-nav d-lg-none" id="settingsMobileNav">
+        <nav class="portal-mobile-nav-links" aria-label="Mobile primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            {% if request.user.role == 'admin' or request.user.role == 'flight_ops' %}
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% endif %}
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+    </div>
+
+    <section class="settings-main-grid" data-default-section="{{ selected_section }}">
+        <aside class="settings-sidebar">
+            {% for section in settings_sections %}
+            <button
+                type="button"
+                class="settings-menu-btn {% if section.id == selected_section %}active{% endif %}"
+                data-settings-section="{{ section.id }}"
+                {% if not section.allowed %}disabled title="Role access will be enabled later"{% endif %}
+            >
+                <span>{{ section.label }}</span>
+                {% if not section.allowed %}<small>🔒</small>{% endif %}
+            </button>
+            {% endfor %}
+        </aside>
+
+        <div class="settings-content">
+            <section class="settings-section" data-section-panel="overview">
+                <h1>Dashboard Overview</h1>
+                <div class="overview-cards">
+                    <article class="overview-card">
+                        <header>
+                            <span>Total Users</span>
+                            <span aria-hidden="true">USR</span>
+                        </header>
+                        <strong>{{ overview.total_users|intcomma }}</strong>
+                        <p>Active and inactive accounts</p>
+                        <footer>
+                            <small>{{ overview.active_users }} active / {{ overview.inactive_users }} inactive</small>
+                            <span class="trend-chip">+{{ overview.user_growth }}% since last month</span>
+                        </footer>
+                    </article>
+                    <article class="overview-card">
+                        <header>
+                            <span>Active Aircraft</span>
+                            <span aria-hidden="true">AIR</span>
+                        </header>
+                        <strong>{{ overview.active_aircraft|intcomma }}</strong>
+                        <p>Currently operational aircraft</p>
+                        <footer>
+                            <span class="warn-chip">{{ overview.in_maintenance_count }} in maintenance</span>
+                        </footer>
+                    </article>
+                    <article class="overview-card">
+                        <header>
+                            <span>System Health</span>
+                            <span aria-hidden="true">SEC</span>
+                        </header>
+                        <strong>{{ overview.system_health }}%</strong>
+                        <p>Overall system operational status</p>
+                        <footer class="health-footer">
+                            <div class="health-track"><span style="width: {{ overview.system_health }}%;"></span></div>
+                            <span class="health-tag">{{ overview.system_health_label }}</span>
+                        </footer>
+                    </article>
+                </div>
+
+                <div class="settings-card user-card">
+                    <div class="section-head">
+                        <h2>User Management</h2>
+                        {% if can_manage_users %}
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#addUserModal"
+                        >
+                            + Add User
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 settings-table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in user_rows %}
+                                <tr>
+                                    <td>{{ row.code }}</td>
+                                    <td>{{ row.name }}</td>
+                                    <td>{{ row.email }}</td>
+                                    <td>{{ row.role }}</td>
+                                    <td><span class="status-pill status-{{ row.status_key }}">{{ row.status_label }}</span></td>
+                                    <td>
+                                        {% if can_manage_users %}
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-secondary user-edit-trigger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editUserModal"
+                                            data-user-id="{{ row.id }}"
+                                            data-username="{{ row.username }}"
+                                            data-first-name="{{ row.first_name }}"
+                                            data-last-name="{{ row.last_name }}"
+                                            data-email="{{ row.email_raw }}"
+                                            data-role="{{ row.role_value }}"
+                                            data-is-active="{% if row.is_active %}true{% else %}false{% endif %}"
+                                        >
+                                            Edit
+                                        </button>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="6" class="text-center text-muted py-4">No users available.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pager-row">
+                        {% if users_page.has_previous %}
+                        <a href="?section=overview&user_page={{ users_page.previous_page_number }}#overview" class="btn btn-sm btn-outline-secondary">Previous</a>
+                        {% else %}
+                        <button class="btn btn-sm btn-outline-secondary" type="button" disabled>Previous</button>
+                        {% endif %}
+                        <span class="pager-page">{{ users_page.number }}</span>
+                        <span class="pager-page">{{ users_page.paginator.num_pages }}</span>
+                        {% if users_page.has_next %}
+                        <a href="?section=overview&user_page={{ users_page.next_page_number }}#overview" class="btn btn-sm btn-outline-secondary">Next</a>
+                        {% else %}
+                        <button class="btn btn-sm btn-outline-secondary" type="button" disabled>Next</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section" data-section-panel="user-management" id="user-management">
+                <h1>User Management</h1>
+                <div class="settings-card">
+                    <div class="section-head">
+                        <h2>All User Accounts</h2>
+                        {% if can_manage_users %}
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#addUserModal"
+                        >
+                            + Add User
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 settings-table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in user_rows %}
+                                <tr>
+                                    <td>{{ row.code }}</td>
+                                    <td>{{ row.name }}</td>
+                                    <td>{{ row.email }}</td>
+                                    <td>{{ row.role }}</td>
+                                    <td><span class="status-pill status-{{ row.status_key }}">{{ row.status_label }}</span></td>
+                                    <td>
+                                        {% if can_manage_users %}
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-secondary user-edit-trigger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editUserModal"
+                                            data-user-id="{{ row.id }}"
+                                            data-username="{{ row.username }}"
+                                            data-first-name="{{ row.first_name }}"
+                                            data-last-name="{{ row.last_name }}"
+                                            data-email="{{ row.email_raw }}"
+                                            data-role="{{ row.role_value }}"
+                                            data-is-active="{% if row.is_active %}true{% else %}false{% endif %}"
+                                        >
+                                            Edit
+                                        </button>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="6" class="text-center text-muted py-4">No users available.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            {% if can_manage_users %}
+            <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title fs-5" id="addUserModalLabel">Add User</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post" novalidate>
+                            <div class="modal-body">
+                                {% csrf_token %}
+                                <input type="hidden" name="settings_action" value="add_user">
+                                <div class="aircraft-form-grid">
+                                    <div>
+                                        <label class="form-label" for="{{ user_form.username.id_for_label }}">Username</label>
+                                        {{ user_form.username }}
+                                        {% if user_form.username.errors %}
+                                        <div class="field-error">{{ user_form.username.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_form.email.id_for_label }}">Email</label>
+                                        {{ user_form.email }}
+                                        {% if user_form.email.errors %}
+                                        <div class="field-error">{{ user_form.email.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_form.first_name.id_for_label }}">First Name</label>
+                                        {{ user_form.first_name }}
+                                        {% if user_form.first_name.errors %}
+                                        <div class="field-error">{{ user_form.first_name.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_form.last_name.id_for_label }}">Last Name</label>
+                                        {{ user_form.last_name }}
+                                        {% if user_form.last_name.errors %}
+                                        <div class="field-error">{{ user_form.last_name.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_form.role.id_for_label }}">Role</label>
+                                        {{ user_form.role }}
+                                        {% if user_form.role.errors %}
+                                        <div class="field-error">{{ user_form.role.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_form.password1.id_for_label }}">Password</label>
+                                        {{ user_form.password1 }}
+                                        {% if user_form.password1.errors %}
+                                        <div class="field-error">{{ user_form.password1.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_form.password2.id_for_label }}">Confirm Password</label>
+                                        {{ user_form.password2 }}
+                                        {% if user_form.password2.errors %}
+                                        <div class="field-error">{{ user_form.password2.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if user_form.non_field_errors %}
+                                <div class="field-error mt-2">{{ user_form.non_field_errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Add User</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title fs-5" id="editUserModalLabel">Edit User</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post" novalidate>
+                            <div class="modal-body">
+                                {% csrf_token %}
+                                <input type="hidden" name="settings_action" value="edit_user">
+                                <input type="hidden" name="edit_user_id" id="edit-user-id" value="{{ edit_target_user_id }}">
+                                <div class="aircraft-form-grid">
+                                    <div>
+                                        <label class="form-label" for="{{ user_edit_form.username.id_for_label }}">Username</label>
+                                        {{ user_edit_form.username }}
+                                        {% if user_edit_form.username.errors %}
+                                        <div class="field-error">{{ user_edit_form.username.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_edit_form.email.id_for_label }}">Email</label>
+                                        {{ user_edit_form.email }}
+                                        {% if user_edit_form.email.errors %}
+                                        <div class="field-error">{{ user_edit_form.email.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_edit_form.first_name.id_for_label }}">First Name</label>
+                                        {{ user_edit_form.first_name }}
+                                        {% if user_edit_form.first_name.errors %}
+                                        <div class="field-error">{{ user_edit_form.first_name.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_edit_form.last_name.id_for_label }}">Last Name</label>
+                                        {{ user_edit_form.last_name }}
+                                        {% if user_edit_form.last_name.errors %}
+                                        <div class="field-error">{{ user_edit_form.last_name.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="{{ user_edit_form.role.id_for_label }}">Role</label>
+                                        {{ user_edit_form.role }}
+                                        {% if user_edit_form.role.errors %}
+                                        <div class="field-error">{{ user_edit_form.role.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex align-items-end">
+                                        <div class="form-check mb-2">
+                                            {{ user_edit_form.is_active }}
+                                            <label class="form-check-label ms-1" for="{{ user_edit_form.is_active.id_for_label }}">Active Account</label>
+                                        </div>
+                                        {% if user_edit_form.is_active.errors %}
+                                        <div class="field-error">{{ user_edit_form.is_active.errors|join:', ' }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if user_edit_form.non_field_errors %}
+                                <div class="field-error mt-2">{{ user_edit_form.non_field_errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <section class="settings-section" data-section-panel="aircraft-registry" id="aircraft-registry">
+                <h1>Aircraft Registry</h1>
+                <div class="settings-card">
+                    <div class="section-head">
+                        <h2>Registered Aircraft</h2>
+                        {% if can_manage_aircraft %}
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#addAircraftModal"
+                        >
+                            + Add Aircraft
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 settings-table">
+                            <thead>
+                                <tr>
+                                    <th>Tail Number</th>
+                                    <th>Type</th>
+                                    <th>Model</th>
+                                    <th>Home Base</th>
+                                    <th>Status</th>
+                                    <th>Last Maint.</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for aircraft in aircraft_rows %}
+                                <tr>
+                                    <td>{{ aircraft.tail_number }}</td>
+                                    <td>{{ aircraft.aircraft_type|default:'-' }}</td>
+                                    <td>{{ aircraft.model }}</td>
+                                    <td>{{ aircraft.home_base.name }}</td>
+                                    <td><span class="status-pill status-{{ aircraft.status }}">{{ aircraft.get_status_display }}</span></td>
+                                    <td>{% if aircraft.last_maintenance_date %}{{ aircraft.last_maintenance_date|date:'Y-m-d' }}{% else %}-{% endif %}</td>
+                                    <td>
+                                        {% if can_manage_aircraft %}
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-secondary aircraft-edit-trigger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editAircraftModal"
+                                            data-aircraft-id="{{ aircraft.id }}"
+                                            data-tail-number="{{ aircraft.tail_number }}"
+                                            data-aircraft-type="{{ aircraft.aircraft_type }}"
+                                            data-model="{{ aircraft.model }}"
+                                            data-home-base="{{ aircraft.home_base.id }}"
+                                            data-maintenance-threshold="{{ aircraft.maintenance_threshold_hours }}"
+                                            data-status="{{ aircraft.status }}"
+                                        >
+                                            Edit
+                                        </button>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="7" class="text-center text-muted py-4">No aircraft records available.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if can_manage_aircraft %}
+                <div class="modal fade" id="addAircraftModal" tabindex="-1" aria-labelledby="addAircraftModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title fs-5" id="addAircraftModalLabel">Add Aircraft</h2>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="post" novalidate>
+                                <div class="modal-body">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="settings_action" value="add_aircraft">
+                                    <div class="aircraft-form-grid">
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_form.tail_number.id_for_label }}">Tail Number</label>
+                                            {{ aircraft_form.tail_number }}
+                                            {% if aircraft_form.tail_number.errors %}
+                                            <div class="field-error">{{ aircraft_form.tail_number.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_form.model.id_for_label }}">Aircraft Model</label>
+                                            {{ aircraft_form.model }}
+                                            {% if aircraft_form.model.errors %}
+                                            <div class="field-error">{{ aircraft_form.model.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_form.aircraft_type.id_for_label }}">Type</label>
+                                            {{ aircraft_form.aircraft_type }}
+                                            {% if aircraft_form.aircraft_type.errors %}
+                                            <div class="field-error">{{ aircraft_form.aircraft_type.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_form.home_base.id_for_label }}">Home Base</label>
+                                            {{ aircraft_form.home_base }}
+                                            {% if aircraft_form.home_base.errors %}
+                                            <div class="field-error">{{ aircraft_form.home_base.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_form.maintenance_threshold_hours.id_for_label }}">Maintenance Threshold (hrs)</label>
+                                            {{ aircraft_form.maintenance_threshold_hours }}
+                                            {% if aircraft_form.maintenance_threshold_hours.errors %}
+                                            <div class="field-error">{{ aircraft_form.maintenance_threshold_hours.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_form.status.id_for_label }}">Status</label>
+                                            {{ aircraft_form.status }}
+                                            {% if aircraft_form.status.errors %}
+                                            <div class="field-error">{{ aircraft_form.status.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Add Aircraft</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="editAircraftModal" tabindex="-1" aria-labelledby="editAircraftModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title fs-5" id="editAircraftModalLabel">Edit Aircraft</h2>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="post" novalidate>
+                                <div class="modal-body">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="settings_action" value="edit_aircraft">
+                                    <input type="hidden" name="edit_aircraft_id" id="edit-aircraft-id" value="{{ edit_target_aircraft_id }}">
+                                    <div class="aircraft-form-grid">
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_edit_form.tail_number.id_for_label }}">Tail Number</label>
+                                            {{ aircraft_edit_form.tail_number }}
+                                            {% if aircraft_edit_form.tail_number.errors %}
+                                            <div class="field-error">{{ aircraft_edit_form.tail_number.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_edit_form.model.id_for_label }}">Aircraft Model</label>
+                                            {{ aircraft_edit_form.model }}
+                                            {% if aircraft_edit_form.model.errors %}
+                                            <div class="field-error">{{ aircraft_edit_form.model.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_edit_form.aircraft_type.id_for_label }}">Type</label>
+                                            {{ aircraft_edit_form.aircraft_type }}
+                                            {% if aircraft_edit_form.aircraft_type.errors %}
+                                            <div class="field-error">{{ aircraft_edit_form.aircraft_type.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_edit_form.home_base.id_for_label }}">Home Base</label>
+                                            {{ aircraft_edit_form.home_base }}
+                                            {% if aircraft_edit_form.home_base.errors %}
+                                            <div class="field-error">{{ aircraft_edit_form.home_base.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_edit_form.maintenance_threshold_hours.id_for_label }}">Maintenance Threshold (hrs)</label>
+                                            {{ aircraft_edit_form.maintenance_threshold_hours }}
+                                            {% if aircraft_edit_form.maintenance_threshold_hours.errors %}
+                                            <div class="field-error">{{ aircraft_edit_form.maintenance_threshold_hours.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" for="{{ aircraft_edit_form.status.id_for_label }}">Status</label>
+                                            {{ aircraft_edit_form.status }}
+                                            {% if aircraft_edit_form.status.errors %}
+                                            <div class="field-error">{{ aircraft_edit_form.status.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if aircraft_edit_form.non_field_errors %}
+                                    <div class="field-error mt-2">{{ aircraft_edit_form.non_field_errors|join:', ' }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+
+            <section class="settings-section" data-section-panel="system-logs">
+                <h1>System Logs</h1>
+                <div class="settings-card">
+                    <div class="section-head">
+                        <h2>Recent Audit Events</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 settings-table">
+                            <thead>
+                                <tr>
+                                    <th>Audit ID</th>
+                                    <th>Time</th>
+                                    <th>Action</th>
+                                    <th>Entity</th>
+                                    <th>Entity ID</th>
+                                    <th>User</th>
+                                    <th>IP Address</th>
+                                    <th>Description</th>
+                                    <th>Integrity Chain</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in system_logs %}
+                                <tr>
+                                    <td>#{{ log.id }}</td>
+                                    <td>{{ log.created_at|date:'Y-m-d H:i:s' }}</td>
+                                    <td>{{ log.get_action_display }}</td>
+                                    <td>{{ log.entity }}</td>
+                                    <td>{% if log.entity_id %}{{ log.entity_id }}{% else %}-{% endif %}</td>
+                                    <td>
+                                        {% if log.user %}
+                                            {{ log.user.username }}<br>
+                                            <small class="text-muted">{{ log.user.get_role_display }}</small>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ log.ip_address|default:'-' }}</td>
+                                    <td>
+                                        <div class="audit-description">{{ log.description }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="audit-chain-label">Prev</div>
+                                        <div class="audit-hash">{{ log.previous_checksum }}</div>
+                                        <div class="audit-chain-label">Current</div>
+                                        <div class="audit-hash">{{ log.checksum }}</div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="9" class="text-center text-muted py-4">No audit logs yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section" data-section-panel="analytics-report">
+                <h1>Analytics Report</h1>
+                <div class="analytics-grid">
+                    <article class="settings-card analytics-metric">
+                        <span>Total Flights</span>
+                        <strong>{{ analytics.total_flights|intcomma }}</strong>
+                    </article>
+                    <article class="settings-card analytics-metric">
+                        <span>Avg Flight Duration</span>
+                        <strong>{{ analytics.avg_duration|floatformat:1 }} hrs</strong>
+                    </article>
+                    <article class="settings-card analytics-metric">
+                        <span>Total Fuel Used</span>
+                        <strong>{{ analytics.total_fuel|floatformat:1|intcomma }}</strong>
+                    </article>
+                    <article class="settings-card analytics-metric">
+                        <span>Active Missions</span>
+                        <strong>{{ analytics.active_missions }}</strong>
+                    </article>
+                    <article class="settings-card analytics-metric">
+                        <span>Maintenance Records</span>
+                        <strong>{{ analytics.maintenance_records }}</strong>
+                    </article>
+                </div>
+                <div class="settings-card analytics-breakdown">
+                    <h2>Role Distribution</h2>
+                    <ul>
+                        {% for role in analytics.role_breakdown %}
+                        <li>
+                            <span>{{ role.name }}</span>
+                            <strong>{{ role.count }}</strong>
+                        </li>
+                        {% empty %}
+                        <li><span>No role distribution data.</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+
+            <section class="settings-section" data-section-panel="configuration">
+                <h1>Configuration</h1>
+                <div class="config-grid">
+                    <article class="settings-card">
+                        <h2>Security Settings</h2>
+                        <p>reCAPTCHA: <strong>{% if config.recaptcha_enabled %}Enabled{% else %}Disabled{% endif %}</strong></p>
+                        <p>Debug Mode: <strong>{% if config.debug %}Enabled{% else %}Disabled{% endif %}</strong></p>
+                    </article>
+                    <article class="settings-card">
+                        <h2>Infrastructure</h2>
+                        <p>Database Engine: <strong>{{ config.database_engine }}</strong></p>
+                        <p>Channels Backend: <strong>{{ config.channels_backend }}</strong></p>
+                    </article>
+                    <article class="settings-card">
+                        <h2>Role Access Setup</h2>
+                        <p>Section-level role restrictions are ready and will be enforced once you provide your role matrix.</p>
+                    </article>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <footer class="settings-footer">
+        <span>© {% now "Y" %} Ghana Air Force. All rights reserved.</span>
+        <span aria-hidden="true">X | in | home</span>
+    </footer>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/topbar-actions.js' %}"></script>
+<script src="{% static 'js/settings-page.js' %}"></script>
+{% if can_manage_users and user_form.errors %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalElement = document.getElementById('addUserModal');
+    if (!modalElement || typeof bootstrap === 'undefined') {
+        return;
+    }
+    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+});
+</script>
+{% endif %}
+{% if can_manage_users and user_edit_form.errors %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalElement = document.getElementById('editUserModal');
+    if (!modalElement || typeof bootstrap === 'undefined') {
+        return;
+    }
+    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+});
+</script>
+{% endif %}
+{% if can_manage_aircraft and aircraft_form.errors %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalElement = document.getElementById('addAircraftModal');
+    if (!modalElement || typeof bootstrap === 'undefined') {
+        return;
+    }
+    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+});
+</script>
+{% endif %}
+{% if can_manage_aircraft and aircraft_edit_form.errors %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalElement = document.getElementById('editAircraftModal');
+    if (!modalElement || typeof bootstrap === 'undefined') {
+        return;
+    }
+    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+});
+</script>
+{% endif %}
+{% endblock %}

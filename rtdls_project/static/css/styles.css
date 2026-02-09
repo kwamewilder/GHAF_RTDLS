@@ -1,0 +1,95 @@
+:root {
+    --navy: #0a2342;
+    --teal: #1b998b;
+    --light: #f5f7fa;
+    --text: #1f2a36;
+    --surface: #ffffff;
+    --border-soft: #dbe4ef;
+    --focus: #4f6bff;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: radial-gradient(circle at top right, #f5fbff, #eef2f8 45%, #e9edf5 75%);
+    color: var(--text);
+    line-height: 1.45;
+}
+
+.nav-main {
+    background: linear-gradient(120deg, var(--navy), #153b64);
+}
+
+.metric-card {
+    border-radius: 0.75rem;
+    background: #ffffff;
+    border: 1px solid #dbe4ef;
+    box-shadow: 0 2px 14px rgba(23, 42, 67, 0.07);
+}
+
+.metric-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #4d627a;
+    margin-bottom: 0.35rem;
+}
+
+.metric-value {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--navy);
+}
+
+.metric-time {
+    font-size: 0.9rem;
+    color: #52667d;
+}
+
+.btn {
+    border-radius: 0.55rem;
+    transition: transform 0.12s ease, box-shadow 0.16s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+a {
+    transition: color 0.16s ease;
+}
+
+.form-control,
+.form-select {
+    border-color: var(--border-soft);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #a5b4ff;
+    box-shadow: 0 0 0 0.2rem rgba(79, 107, 255, 0.14);
+}
+
+:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.table > :not(caption) > * > * {
+    border-bottom-color: #e8edf5;
+}
+
+@media (max-width: 768px) {
+    main.container,
+    main.container-fluid {
+        padding-left: 0.8rem;
+        padding-right: 0.8rem;
+    }
+}

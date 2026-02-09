@@ -1,0 +1,7 @@
+export enum AppRole {
+  ADMIN = 'ADMIN',
+  FLIGHT_OPS = 'FLIGHT_OPS',
+  MAINTENANCE = 'MAINTENANCE',
+  COMMANDER = 'COMMANDER',
+  AUDITOR = 'AUDITOR',
+}

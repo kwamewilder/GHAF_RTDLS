@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block body_class %}flight-log-page{% endblock %}
+{% block main_class %}container-fluid flight-log-shell py-3 py-lg-4{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/flight-log-page.css' %}">
+<link rel="stylesheet" href="{% static 'css/topbar-actions.css' %}">
+{% endblock %}
+
+{% block navigation %}{% endblock %}
+
+{% block content %}
+<div class="flight-layout-wrap">
+    <header class="flight-topbar">
+        <div class="flight-brand">
+            <div class="flight-brand-mark" aria-hidden="true">✈</div>
+            <div class="flight-brand-name">Flight Monitoring Portal</div>
+        </div>
+        <button
+            class="btn portal-mobile-menu-toggle d-inline-flex d-lg-none"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#flightMobileNav"
+            aria-controls="flightMobileNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+        >
+            Menu
+        </button>
+        <nav class="flight-nav d-none d-lg-flex" aria-label="Primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+        {% include 'partials/topbar_actions.html' %}
+    </header>
+    <div class="collapse portal-mobile-nav d-lg-none" id="flightMobileNav">
+        <nav class="portal-mobile-nav-links" aria-label="Mobile primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+    </div>
+
+    <section class="flight-main-grid">
+        <article class="flight-panel form-panel">
+            <h1>{% if editing_log %}Update Flight Log{% else %}Flight Information Log{% endif %}</h1>
+            <p>
+                {% if editing_log %}
+                Update the flight details and add ATA to complete this mission.
+                {% else %}
+                Enter details for a new flight record. Leave ATA blank while the flight is in progress.
+                {% endif %}
+            </p>
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small">
+                {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" class="flight-form" novalidate>
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.aircraft.id_for_label }}">Aircraft Tail Number</label>
+                    {{ form.aircraft }}
+                    {% for error in form.aircraft.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.atd.id_for_label }}">Actual Time of Departure (ATD)</label>
+                    <div class="field-with-icon">
+                        <span class="field-icon">🗓</span>
+                        {{ form.atd }}
+                    </div>
+                    {% for error in form.atd.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.eta.id_for_label }}">Estimated Time of Arrival (ETA)</label>
+                    <div class="field-with-icon">
+                        <span class="field-icon">⏲</span>
+                        {{ form.eta }}
+                    </div>
+                    {% for error in form.eta.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.ata.id_for_label }}">Actual Time of Arrival (ATA)</label>
+                    <div class="field-with-icon">
+                        <span class="field-icon">⏱</span>
+                        {{ form.ata }}
+                    </div>
+                    {% for error in form.ata.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.departure_base.id_for_label }}">Departure</label>
+                    <div class="field-with-icon">
+                        <span class="field-icon">⇢</span>
+                        {{ form.departure_base }}
+                    </div>
+                    {% for error in form.departure_base.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.arrival_base.id_for_label }}">Destination</label>
+                    <div class="field-with-icon">
+                        <span class="field-icon">⇠</span>
+                        {{ form.arrival_base }}
+                    </div>
+                    {% for error in form.arrival_base.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.pilot.id_for_label }}">Pilot</label>
+                    <div class="field-with-icon">
+                        <span class="field-icon">◉</span>
+                        {{ form.pilot }}
+                    </div>
+                    {% for error in form.pilot.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.mission_type.id_for_label }}">Aircraft Type</label>
+                    {{ form.mission_type }}
+                    {% for error in form.mission_type.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="{{ form.altitude_ft.id_for_label }}">Altitude (ft)</label>
+                        {{ form.altitude_ft }}
+                        {% for error in form.altitude_ft.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="{{ form.speed_knots.id_for_label }}">Speed (knots)</label>
+                        {{ form.speed_knots }}
+                        {% for error in form.speed_knots.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3 compact-row">
+                    <div class="col-6">
+                        <label class="form-label" for="{{ form.flight_hours.id_for_label }}">Flight Hours</label>
+                        {{ form.flight_hours }}
+                        {% for error in form.flight_hours.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="{{ form.fuel_used.id_for_label }}">Fuel Used</label>
+                        {{ form.fuel_used }}
+                        {% for error in form.fuel_used.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.remarks.id_for_label }}">Remarks</label>
+                    {{ form.remarks }}
+                    {% for error in form.remarks.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <details class="mb-3">
+                    <summary>Crew Members (optional)</summary>
+                    <div class="pt-2">{{ form.crew_members }}</div>
+                </details>
+
+                <div class="flight-form-actions">
+                    {% if editing_log %}
+                    <a class="btn btn-light border" href="{% url 'operations:flight-log-create' %}">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Update</button>
+                    {% else %}
+                    <button type="reset" class="btn btn-light border">Clear</button>
+                    <button type="submit" class="btn btn-primary">Submit Flight Log</button>
+                    {% endif %}
+                </div>
+            </form>
+        </article>
+
+        <article class="flight-panel logs-panel">
+            <h2>Recent Flight Logs</h2>
+            <p>Latest entries from your flight records.</p>
+            <ul class="recent-log-list">
+                {% for log in recent_logs %}
+                <li>
+                    <span class="log-icon" aria-hidden="true">✈</span>
+                    <div>
+                        <div class="log-main">{{ log.aircraft.tail_number }}</div>
+                        <div class="log-route">{{ log.departure_base.name|slice:':3'|upper }} → {{ log.arrival_base.name|slice:':3'|upper }}</div>
+                        <div class="log-meta">Aircraft: {{ log.aircraft.model }} | {{ log.pilot_name|default:'Pilot not set' }}</div>
+                        <div class="log-meta">ATD: {{ log.atd|date:'Y-m-d H:i' }} | ETA: {{ log.eta|date:'Y-m-d H:i' }} | ATA: {% if log.ata %}{{ log.ata|date:'Y-m-d H:i' }}{% else %}Pending{% endif %}</div>
+                        <div class="log-meta">Status: {{ log.get_mission_status_display }}</div>
+                        {% if log.mission_status == 'active' %}
+                            {% if request.user.role == 'admin' or request.user.role == 'flight_ops' %}
+                        <a class="log-edit-link" href="{% url 'operations:flight-log-update' log.id %}">Add ATA / Edit Flight</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </li>
+                {% empty %}
+                <li class="empty-state">No recent logs available.</li>
+                {% endfor %}
+            </ul>
+        </article>
+
+        <aside class="flight-side">
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-title"><span aria-hidden="true">✈</span> Total Flights Logged</div>
+                    <div class="stat-value">{{ stats.total_flights|intcomma }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><span aria-hidden="true">△</span> Average Altitude</div>
+                    <div class="stat-value">{{ stats.average_altitude|floatformat:0|intcomma }} ft</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><span aria-hidden="true">◔</span> Average Speed</div>
+                    <div class="stat-value">{{ stats.average_speed|floatformat:0|intcomma }} knots</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><span aria-hidden="true">◷</span> Total Flight Hours</div>
+                    <div class="stat-value">{{ stats.total_hours|floatformat:0|intcomma }}</div>
+                </div>
+            </div>
+
+            <div class="flight-panel alert-panel">
+                <h2>Aircraft Alerts</h2>
+                <p>Important notices regarding your fleet's maintenance and status.</p>
+                <div class="alert-list">
+                    {% for alert in alert_items %}
+                    <div class="alert-item {% if alert.severity == 'high' %}alert-danger{% elif alert.severity == 'medium' %}alert-warning{% else %}alert-info{% endif %}">
+                        <strong>{% if alert.severity == 'high' %}❗{% elif alert.severity == 'medium' %}⚠{% else %}ℹ{% endif %} {{ alert.title }}</strong>
+                        <small>Tail Number: {{ alert.aircraft.tail_number }}</small>
+                    </div>
+                    {% empty %}
+                    <div class="alert-item alert-info">
+                        <strong>ℹ No active alerts.</strong>
+                        <small>System is currently stable.</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+    </section>
+
+    <footer class="flight-footer">
+        <span>© {% now "Y" %} Ghana Air Force. All rights reserved.</span>
+        <span class="footer-icons" aria-hidden="true">𝕏 · ⌂ · in</span>
+    </footer>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/topbar-actions.js' %}"></script>
+{% endblock %}

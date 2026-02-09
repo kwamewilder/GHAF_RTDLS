@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  FLIGHT_OPS
+  MAINTENANCE
+  COMMANDER
+  AUDITOR
+}
+
+enum AircraftStatus {
+  AVAILABLE
+  IN_MISSION
+  IN_MAINTENANCE
+}
+
+enum MissionStatus {
+  ACTIVE
+  COMPLETED
+}
+
+enum AlertSeverity {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  ROLE_CHANGE
+  VIEW
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  username        String           @unique
+  passwordHash    String
+  firstName       String?
+  lastName        String?
+  email           String?          @unique
+  role            Role             @default(AUDITOR)
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  flightLogs      FlightLog[]
+  maintenanceLogs MaintenanceLog[]
+  auditLogs       AuditLog[]
+}
+
+model Base {
+  id         Int         @id @default(autoincrement())
+  name       String      @unique
+  location   String
+  aircraft   Aircraft[]
+  departures FlightLog[] @relation("DepartureBase")
+  arrivals   FlightLog[] @relation("ArrivalBase")
+}
+
+model Crew {
+  id          Int         @id @default(autoincrement())
+  fullName    String
+  rank        String
+  role        String
+  isAvailable Boolean     @default(true)
+  flightLogs  FlightLog[]
+}
+
+model Aircraft {
+  id                        Int              @id @default(autoincrement())
+  tailNumber                String           @unique
+  model                     String
+  maintenanceThresholdHours Float            @default(100)
+  status                    AircraftStatus   @default(AVAILABLE)
+  homeBaseId                Int
+  homeBase                  Base             @relation(fields: [homeBaseId], references: [id])
+  flightLogs                FlightLog[]
+  maintenanceLogs           MaintenanceLog[]
+  alerts                    Alert[]
+}
+
+model FlightLog {
+  id              Int           @id @default(autoincrement())
+  aircraftId      Int
+  aircraft        Aircraft      @relation(fields: [aircraftId], references: [id])
+  pilotName       String
+  missionType     String
+  missionStatus   MissionStatus @default(COMPLETED)
+  flightDateTime  DateTime
+  flightHours     Float
+  fuelUsed        Float
+  departureBaseId Int
+  departureBase   Base          @relation("DepartureBase", fields: [departureBaseId], references: [id])
+  arrivalBaseId   Int
+  arrivalBase     Base          @relation("ArrivalBase", fields: [arrivalBaseId], references: [id])
+  remarks         String?
+  loggedById      Int
+  loggedBy        User          @relation(fields: [loggedById], references: [id])
+  crewMembers     Crew[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model MaintenanceLog {
+  id                  Int      @id @default(autoincrement())
+  aircraftId          Int
+  aircraft            Aircraft @relation(fields: [aircraftId], references: [id])
+  totalFlightHours    Float
+  lastMaintenanceDate DateTime
+  componentStatus     String
+  maintenanceNotes    String?
+  loggedById          Int
+  loggedBy            User     @relation(fields: [loggedById], references: [id])
+  alerts              Alert[]
+  createdAt           DateTime @default(now())
+}
+
+model Alert {
+  id               Int            @id @default(autoincrement())
+  aircraftId       Int
+  aircraft         Aircraft       @relation(fields: [aircraftId], references: [id])
+  maintenanceLogId Int
+  maintenanceLog   MaintenanceLog @relation(fields: [maintenanceLogId], references: [id])
+  title            String
+  message          String
+  severity         AlertSeverity  @default(MEDIUM)
+  isResolved       Boolean        @default(false)
+  recipientRole    Role           @default(MAINTENANCE)
+  createdAt        DateTime       @default(now())
+}
+
+model AuditLog {
+  id               Int         @id @default(autoincrement())
+  userId           Int?
+  user             User?       @relation(fields: [userId], references: [id])
+  action           AuditAction
+  entity           String
+  entityId         Int?
+  description      String
+  ipAddress        String?
+  createdAt        DateTime    @default(now())
+  previousChecksum String
+  checksum         String
+}

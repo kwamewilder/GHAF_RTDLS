@@ -1,0 +1,470 @@
+:root {
+    --flight-bg: #f5f7fb;
+    --flight-card: #ffffff;
+    --flight-border: #e5e9f2;
+    --flight-text: #242938;
+    --flight-muted: #7a8295;
+    --flight-primary: #5c6df7;
+    --flight-danger-bg: #feecec;
+    --flight-danger-text: #dc3f4f;
+    --flight-warning-bg: #fff5e8;
+    --flight-warning-text: #d47f11;
+    --flight-info-bg: #f1f5fb;
+    --flight-info-text: #445267;
+}
+
+.flight-log-page {
+    background: var(--flight-bg);
+    color: var(--flight-text);
+}
+
+.flight-log-shell {
+    max-width: 1480px;
+}
+
+.flight-layout-wrap {
+    border: 1px solid var(--flight-border);
+    border-radius: 1rem;
+    padding: 0.95rem;
+    background: #f8f9fd;
+}
+
+.flight-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--flight-border);
+    border-radius: 0.7rem;
+    background: var(--flight-card);
+    margin-bottom: 1rem;
+    position: sticky;
+    top: 0.65rem;
+    z-index: 40;
+}
+
+.flight-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.flight-brand-mark {
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 0.55rem;
+    background: linear-gradient(135deg, #0b2e59, #1771d3);
+    color: #f7d35a;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flight-brand-name {
+    font-weight: 700;
+    font-size: 1.15rem;
+}
+
+.flight-nav {
+    display: flex;
+    gap: 1.25rem;
+}
+
+.flight-nav a {
+    color: #4a5468;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.flight-nav a.active {
+    color: var(--flight-primary);
+}
+
+.flight-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.flight-search input {
+    width: 255px;
+    border-color: var(--flight-border);
+    background: #f9fbff;
+    padding-left: 1.7rem;
+}
+
+.flight-search {
+    position: relative;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.55rem;
+    top: 0.35rem;
+    color: #8b93a5;
+    font-size: 0.92rem;
+    z-index: 2;
+}
+
+.flight-icon-btn,
+.flight-avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid var(--flight-border);
+    background: #ffffff;
+    color: #5f6878;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.flight-icon-btn svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.flight-icon-btn {
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.flight-avatar {
+    background: #ece8ff;
+    color: #4f44b9;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.flight-main-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1.15fr 1fr;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.flight-panel {
+    border: 1px solid var(--flight-border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    background: var(--flight-card);
+}
+
+.flight-panel h1,
+.flight-panel h2 {
+    margin: 0;
+    font-size: clamp(1.45rem, 2.4vw, 1.8rem);
+    font-weight: 700;
+    line-height: 1.08;
+}
+
+.flight-panel h2 {
+    font-size: clamp(1.3rem, 2.1vw, 1.6rem);
+}
+
+.flight-panel p {
+    margin: 0.35rem 0 1.1rem;
+    color: var(--flight-muted);
+    font-size: 0.9rem;
+}
+
+.form-panel {
+    min-height: 920px;
+}
+
+.logs-panel {
+    min-height: 920px;
+}
+
+.alert-panel {
+    min-height: 620px;
+}
+
+.field-with-icon {
+    position: relative;
+}
+
+.field-icon {
+    position: absolute;
+    left: 0.65rem;
+    top: 0.73rem;
+    color: #818b9e;
+    font-size: 0.82rem;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.field-with-icon .form-control,
+.field-with-icon .form-select {
+    padding-left: 1.8rem;
+}
+
+.flight-form .form-label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+}
+
+.flight-form .form-control,
+.flight-form .form-select,
+.flight-form textarea {
+    border-color: var(--flight-border);
+    border-radius: 0.5rem;
+    min-height: 2.75rem;
+    background: #fbfcff;
+}
+
+.flight-form textarea {
+    min-height: 5.2rem;
+}
+
+.field-error {
+    color: #c83849;
+    font-size: 0.78rem;
+    margin-top: 0.3rem;
+}
+
+.flight-form details {
+    border: 1px dashed #d8deea;
+    border-radius: 0.5rem;
+    padding: 0.55rem 0.7rem;
+    background: #fafcff;
+}
+
+.flight-form summary {
+    cursor: pointer;
+    color: #5c6476;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.flight-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 2.2rem;
+}
+
+.flight-form-actions .btn {
+    min-width: 130px;
+}
+
+.recent-log-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.95rem;
+}
+
+.recent-log-list li {
+    display: grid;
+    grid-template-columns: 1.35rem 1fr;
+    gap: 0.55rem;
+}
+
+.log-icon {
+    color: #ef5b92;
+    font-size: 1rem;
+    margin-top: 0.15rem;
+}
+
+.log-main {
+    font-size: 1.08rem;
+    font-weight: 700;
+}
+
+.log-route {
+    color: #4e576a;
+    font-weight: 600;
+    margin-top: 0.1rem;
+    letter-spacing: 0.02em;
+}
+
+.log-meta {
+    color: var(--flight-muted);
+    font-size: 0.83rem;
+    margin-top: 0.1rem;
+}
+
+.log-edit-link {
+    display: inline-flex;
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    color: var(--flight-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.log-edit-link:hover {
+    text-decoration: underline;
+}
+
+.empty-state {
+    display: block;
+    color: var(--flight-muted);
+    padding: 0.3rem 0;
+}
+
+.flight-side {
+    display: grid;
+    gap: 1rem;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.stat-card {
+    border: 1px solid var(--flight-border);
+    border-radius: 0.7rem;
+    padding: 0.8rem 0.9rem;
+    background: var(--flight-card);
+    transition: box-shadow 0.16s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 8px 16px rgba(31, 41, 66, 0.07);
+}
+
+.stat-title {
+    color: #768096;
+    font-size: 0.88rem;
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.stat-value {
+    font-size: 2.05rem;
+    font-weight: 700;
+    line-height: 1.05;
+}
+
+.alert-panel {
+    padding-top: 1.15rem;
+}
+
+.alert-list {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.alert-item {
+    border-radius: 0.55rem;
+    border: 1px solid var(--flight-border);
+    padding: 0.6rem 0.75rem;
+    transition: box-shadow 0.16s ease;
+}
+
+.alert-item:hover {
+    box-shadow: 0 8px 16px rgba(31, 41, 66, 0.06);
+}
+
+.alert-item strong {
+    display: block;
+    font-size: 0.96rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.alert-item small {
+    display: block;
+    color: #848da0;
+    margin-top: 0.15rem;
+}
+
+.alert-danger {
+    background: var(--flight-danger-bg);
+    border-color: #f7c4cc;
+    color: var(--flight-danger-text);
+}
+
+.alert-warning {
+    background: var(--flight-warning-bg);
+    border-color: #f7d9b0;
+    color: var(--flight-warning-text);
+}
+
+.alert-info {
+    background: var(--flight-info-bg);
+    border-color: #dbe4f2;
+    color: var(--flight-info-text);
+}
+
+.flight-footer {
+    border: 1px solid var(--flight-border);
+    border-radius: 0.65rem;
+    background: var(--flight-card);
+    padding: 0.8rem 1rem;
+    color: #8c95a8;
+    font-size: 0.86rem;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-icons {
+    color: #7f879a;
+    font-weight: 600;
+}
+
+@media (max-width: 1400px) {
+    .flight-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-panel,
+    .logs-panel,
+    .alert-panel {
+        min-height: auto;
+    }
+
+    .stat-value {
+        font-size: 1.7rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .flight-layout-wrap {
+        padding: 0.65rem;
+    }
+
+    .flight-topbar {
+        flex-wrap: wrap;
+        position: static;
+    }
+
+    .flight-brand-name {
+        font-size: 1rem;
+    }
+
+    .flight-panel {
+        padding: 0.95rem;
+    }
+
+    .flight-panel h1,
+    .flight-panel h2 {
+        font-size: 1.55rem;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .flight-footer {
+        display: grid;
+        gap: 0.35rem;
+        justify-items: start;
+    }
+}

@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}maintenance-page{% endblock %}
+{% block main_class %}container-fluid maintenance-shell py-3 py-lg-4{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/maintenance-page.css' %}">
+<link rel="stylesheet" href="{% static 'css/topbar-actions.css' %}">
+{% endblock %}
+
+{% block navigation %}{% endblock %}
+
+{% block content %}
+<div class="maintenance-layout-wrap">
+    <header class="maintenance-topbar">
+        <div class="maintenance-brand">
+            <div class="maintenance-brand-mark" aria-hidden="true">GAF</div>
+            <div class="maintenance-brand-name">Flight Monitoring Portal</div>
+        </div>
+        <button
+            class="btn portal-mobile-menu-toggle d-inline-flex d-lg-none"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#maintenanceMobileNav"
+            aria-controls="maintenanceMobileNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+        >
+            Menu
+        </button>
+        <nav class="maintenance-nav d-none d-lg-flex" aria-label="Primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            {% if request.user.role == 'admin' or request.user.role == 'flight_ops' %}
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% endif %}
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+        {% include 'partials/topbar_actions.html' %}
+    </header>
+    <div class="collapse portal-mobile-nav d-lg-none" id="maintenanceMobileNav">
+        <nav class="portal-mobile-nav-links" aria-label="Mobile primary">
+            <a href="{% url 'dashboard:home' %}" class="{% if '/dashboard/' in request.path %}active{% endif %}">Dashboard</a>
+            {% if request.user.role == 'admin' or request.user.role == 'flight_ops' %}
+            <a href="{% url 'operations:flight-log-create' %}" class="{% if '/operations/' in request.path %}active{% endif %}">Log Flight</a>
+            {% endif %}
+            {% if request.user.role == 'admin' or request.user.role == 'maintenance' %}
+            <a href="{% url 'maintenance:log-create' %}" class="{% if '/maintenance/' in request.path %}active{% endif %}">Maintenance</a>
+            {% endif %}
+            <a href="{% url 'reports-dashboard' %}" class="{% if '/reports/' in request.path %}active{% endif %}">Reports</a>
+            <a href="{% url 'profile' %}" class="{% if '/accounts/profile/' in request.path %}active{% endif %}">Settings</a>
+        </nav>
+    </div>
+
+    <section class="maintenance-main-grid">
+        <article class="maintenance-panel maintenance-form-panel">
+            <h1>Maintenance Entry</h1>
+            <p>Record aircraft maintenance status and trigger predictive alerts when thresholds are exceeded.</p>
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small">
+                {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" class="maintenance-form" novalidate>
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.aircraft.id_for_label }}">Aircraft</label>
+                    {{ form.aircraft }}
+                    {% for error in form.aircraft.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.total_flight_hours.id_for_label }}">Total Flight Hours</label>
+                    {{ form.total_flight_hours }}
+                    {% for error in form.total_flight_hours.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.last_maintenance_date.id_for_label }}">Last Maintenance Date</label>
+                    {{ form.last_maintenance_date }}
+                    {% for error in form.last_maintenance_date.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.component_status.id_for_label }}">Component Status</label>
+                    {{ form.component_status }}
+                    {% for error in form.component_status.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.maintenance_notes.id_for_label }}">Maintenance Notes</label>
+                    {{ form.maintenance_notes }}
+                    {% for error in form.maintenance_notes.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="maintenance-form-actions">
+                    <button class="btn btn-warning" type="submit">Submit Maintenance Log</button>
+                </div>
+            </form>
+        </article>
+
+        <aside class="maintenance-side">
+            <div class="maintenance-stats-grid">
+                <article class="maintenance-stat-card">
+                    <span>Total Logs</span>
+                    <strong>{{ stats.total_logs }}</strong>
+                </article>
+                <article class="maintenance-stat-card">
+                    <span>Open Alerts</span>
+                    <strong>{{ stats.open_alerts }}</strong>
+                </article>
+                <article class="maintenance-stat-card">
+                    <span>High Severity</span>
+                    <strong>{{ stats.high_alerts }}</strong>
+                </article>
+                <article class="maintenance-stat-card">
+                    <span>In Maintenance</span>
+                    <strong>{{ stats.aircraft_in_maintenance }}</strong>
+                </article>
+            </div>
+
+            <section class="maintenance-panel">
+                <h2>Recent Maintenance Logs</h2>
+                <ul class="maintenance-list">
+                    {% for log in recent_logs %}
+                    <li>
+                        <strong>{{ log.aircraft.tail_number }} | {{ log.component_status }}</strong>
+                        <span>Total Hours: {{ log.total_flight_hours }} | Last Maint: {{ log.last_maintenance_date }}</span>
+                        <small>{{ log.created_at|date:'Y-m-d H:i' }}{% if log.logged_by %} by {{ log.logged_by.username }}{% endif %}</small>
+                    </li>
+                    {% empty %}
+                    <li class="empty">No entries yet.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+            <section class="maintenance-panel">
+                <h2>Current Alerts</h2>
+                <ul class="maintenance-alert-list">
+                    {% for alert in active_alerts %}
+                    <li class="severity-{{ alert.severity }}">
+                        <strong>{{ alert.title }}</strong>
+                        <span>{{ alert.aircraft.tail_number }}: {{ alert.message }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="empty">No active alerts.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        </aside>
+    </section>
+
+    <footer class="maintenance-footer">
+        <span>© {% now "Y" %} Ghana Air Force. All rights reserved.</span>
+        <span aria-hidden="true">X | in | home</span>
+    </footer>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/topbar-actions.js' %}"></script>
+{% endblock %}

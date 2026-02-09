@@ -1,0 +1,556 @@
+:root {
+    --settings-bg: #f5f7fc;
+    --settings-card: #ffffff;
+    --settings-border: #e3e8f2;
+    --settings-text: #222839;
+    --settings-muted: #7c8599;
+    --settings-primary: #5e6de3;
+}
+
+.settings-page {
+    background: var(--settings-bg);
+    color: var(--settings-text);
+}
+
+.settings-shell {
+    max-width: 1550px;
+}
+
+.settings-layout {
+    background: #f8fafe;
+    border: 1px solid var(--settings-border);
+    border-radius: 1rem;
+    padding: 0.9rem;
+}
+
+.settings-topbar {
+    background: var(--settings-card);
+    border: 1px solid var(--settings-border);
+    border-radius: 0.75rem;
+    padding: 0.6rem 0.8rem;
+    display: flex;
+    gap: 0.85rem;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0.65rem;
+    z-index: 40;
+}
+
+.settings-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.settings-brand-mark {
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #0f2f5a, #2f79d4);
+    color: #f8d14f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.settings-brand-name {
+    font-size: 1.12rem;
+    font-weight: 700;
+}
+
+.settings-nav {
+    display: flex;
+    gap: 1.2rem;
+}
+
+.settings-nav a {
+    color: #4e586d;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.settings-nav a.active {
+    color: var(--settings-primary);
+}
+
+.settings-actions {
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+}
+
+.settings-search {
+    position: relative;
+}
+
+.settings-search input {
+    width: 240px;
+    border-color: var(--settings-border);
+    background: #fbfcff;
+    padding-left: 1.65rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.5rem;
+    top: 0.34rem;
+    color: #8b94a7;
+    z-index: 2;
+}
+
+.settings-icon-btn,
+.settings-avatar {
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--settings-border);
+    border-radius: 999px;
+    background: #fff;
+    color: #5a6478;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 0.85rem;
+}
+
+.settings-avatar {
+    background: #ecebff;
+    color: #473fbb;
+    font-weight: 700;
+}
+
+.settings-main-grid {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.settings-sidebar {
+    display: grid;
+    gap: 0.35rem;
+    position: sticky;
+    top: 5.2rem;
+}
+
+.settings-menu-btn {
+    border: 1px solid #d4daf1;
+    border-radius: 0.45rem;
+    background: #7280db;
+    color: #f5f7ff;
+    text-align: left;
+    padding: 0.65rem 0.75rem;
+    font-weight: 600;
+    font-size: 0.94rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.settings-menu-btn.active {
+    background: var(--settings-primary);
+    border-color: var(--settings-primary);
+}
+
+.settings-menu-btn:not([disabled]):hover {
+    background: #5a68d9;
+}
+
+.settings-menu-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.settings-section {
+    display: none;
+}
+
+.settings-section.is-active {
+    display: block;
+}
+
+.settings-section h1 {
+    font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+    margin: 0 0 0.95rem;
+    font-weight: 700;
+}
+
+.overview-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.overview-card {
+    border: 1px solid var(--settings-border);
+    border-radius: 0.65rem;
+    padding: 0.9rem 0.95rem;
+    background: var(--settings-card);
+    display: grid;
+    gap: 0.45rem;
+    transition: box-shadow 0.16s ease;
+}
+
+.overview-card:hover {
+    box-shadow: 0 8px 16px rgba(33, 46, 73, 0.08);
+}
+
+.overview-card header {
+    display: flex;
+    justify-content: space-between;
+    color: #5d6578;
+    font-size: 0.88rem;
+}
+
+.overview-card strong {
+    font-size: 2.15rem;
+    line-height: 1.05;
+}
+
+.overview-card p {
+    margin: 0;
+    color: var(--settings-muted);
+    font-size: 0.84rem;
+}
+
+.overview-card footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.overview-card footer small {
+    color: #8a93a8;
+    font-size: 0.78rem;
+}
+
+.trend-chip {
+    background: #d8f7e5;
+    color: #0f7e47;
+    border-radius: 999px;
+    padding: 0.16rem 0.5rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.warn-chip {
+    background: #ffecd4;
+    color: #a25a06;
+    border-radius: 999px;
+    padding: 0.16rem 0.48rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.health-footer {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.health-track {
+    height: 0.35rem;
+    border-radius: 999px;
+    background: #dde2f4;
+    overflow: hidden;
+}
+
+.health-track span {
+    display: block;
+    height: 100%;
+    background: var(--settings-primary);
+}
+
+.health-tag {
+    background: #dce5ff;
+    color: #3652c9;
+    border-radius: 999px;
+    padding: 0.18rem 0.52rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.settings-card {
+    margin-top: 0.95rem;
+    border: 1px solid var(--settings-border);
+    border-radius: 0.65rem;
+    background: var(--settings-card);
+    padding: 0.9rem;
+}
+
+.aircraft-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem 0.9rem;
+}
+
+.aircraft-form-grid .form-label {
+    font-size: 0.83rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.aircraft-form-grid .form-control,
+.aircraft-form-grid .form-select {
+    min-height: 2.45rem;
+    border-color: var(--settings-border);
+    background: #fbfcff;
+}
+
+.aircraft-form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.15rem;
+}
+
+.field-error {
+    color: #b42318;
+    font-size: 0.76rem;
+    margin-top: 0.18rem;
+}
+
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+}
+
+.section-head h2 {
+    margin: 0;
+    font-size: 1.85rem;
+    font-weight: 700;
+}
+
+.settings-table th,
+.settings-table td {
+    font-size: 0.86rem;
+    vertical-align: middle;
+}
+
+.settings-table tbody tr:hover {
+    background: #f7faff;
+}
+
+.settings-table th {
+    font-weight: 600;
+    color: #7a8398;
+}
+
+.audit-description {
+    white-space: normal;
+    min-width: 280px;
+}
+
+.audit-chain-label {
+    color: #7a8398;
+    font-size: 0.74rem;
+    font-weight: 600;
+    margin-bottom: 0.08rem;
+}
+
+.audit-hash {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    max-width: 230px;
+    overflow-wrap: anywhere;
+    color: #394154;
+    margin-bottom: 0.32rem;
+}
+
+.status-pill {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 0.12rem 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.status-active {
+    background: #d9f6e5;
+    color: #0f7f44;
+}
+
+.status-pending {
+    background: #fff3da;
+    color: #a86909;
+}
+
+.status-inactive {
+    background: #ffe2e2;
+    color: #b12020;
+}
+
+.status-available {
+    background: #d9f6e5;
+    color: #0f7f44;
+}
+
+.status-in_mission {
+    background: #dfe8ff;
+    color: #3758d2;
+}
+
+.status-in_maintenance {
+    background: #ffe8d7;
+    color: #b56007;
+}
+
+.pager-row {
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.pager-page {
+    min-width: 1.7rem;
+    height: 1.7rem;
+    border: 1px solid var(--settings-border);
+    border-radius: 0.3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    color: #606a80;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.analytics-metric {
+    margin-top: 0;
+}
+
+.analytics-metric span {
+    color: #7a8499;
+    font-size: 0.85rem;
+}
+
+.analytics-metric strong {
+    display: block;
+    margin-top: 0.22rem;
+    font-size: 1.8rem;
+}
+
+.analytics-breakdown h2,
+.config-grid h2 {
+    margin: 0 0 0.65rem;
+    font-size: 1.35rem;
+}
+
+.analytics-breakdown ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.45rem;
+}
+
+.analytics-breakdown li {
+    border: 1px solid var(--settings-border);
+    border-radius: 0.45rem;
+    padding: 0.45rem 0.6rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.config-grid p {
+    margin: 0 0 0.45rem;
+    color: #606a80;
+}
+
+.settings-footer {
+    margin-top: 1rem;
+    border: 1px solid var(--settings-border);
+    border-radius: 0.65rem;
+    background: var(--settings-card);
+    padding: 0.75rem 0.95rem;
+    color: #8d95a8;
+    font-size: 0.86rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (max-width: 1400px) {
+    .settings-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-sidebar {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .overview-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .config-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-layout {
+        padding: 0.65rem;
+    }
+
+    .settings-topbar {
+        flex-wrap: wrap;
+        position: static;
+    }
+
+    .settings-brand-name {
+        font-size: 1rem;
+    }
+
+    .settings-sidebar {
+        grid-template-columns: 1fr;
+        position: static;
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .aircraft-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-section h1 {
+        font-size: 2rem;
+    }
+}
